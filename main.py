@@ -21,13 +21,33 @@ from src.models import Document
 from src.store import EmbeddingStore
 
 SAMPLE_FILES = [
-    "data/python_intro.txt",
-    "data/vector_store_notes.md",
-    "data/rag_system_design.md",
-    "data/customer_support_playbook.txt",
-    "data/chunking_experiment_report.md",
-    "data/vi_retrieval_notes.md",
+    "data/ecommerce/ebay-buyer-money-back-guarantee.md",
+    "data/ecommerce/ebay-buyer-return-refund.md",
+    "data/ecommerce/ebay-buyer-return-shipping.md",
+    "data/ecommerce/ebay-seller-protections.md",
+    "data/ecommerce/ebay-seller-standards.md",
 ]
+
+def parse_markdown_with_frontmatter(content: str) -> tuple[dict, str]:
+    metadata = {}
+    lines = content.split('\n')
+    if lines and lines[0].strip() == '---':
+        end_idx = -1
+        for i in range(1, len(lines)):
+            if lines[i].strip() == '---':
+                end_idx = i
+                break
+        
+        if end_idx != -1:
+            for i in range(1, end_idx):
+                line = lines[i].strip()
+                if ':' in line:
+                    key, val = line.split(':', 1)
+                    val = val.split('#')[0].strip()
+                    val = val.strip(' \'"')
+                    metadata[key.strip()] = val
+            content = '\n'.join(lines[end_idx+1:])
+    return metadata, content
 
 
 def load_documents_from_files(file_paths: list[str]) -> list[Document]:
@@ -47,11 +67,16 @@ def load_documents_from_files(file_paths: list[str]) -> list[Document]:
             continue
 
         content = path.read_text(encoding="utf-8")
+        metadata, content = parse_markdown_with_frontmatter(content)
+        
+        metadata["source"] = str(path)
+        metadata["extension"] = path.suffix.lower()
+
         documents.append(
             Document(
-                id=path.stem,
-                content=content,
-                metadata={"source": str(path), "extension": path.suffix.lower()},
+                id=metadata.get("doc_id", path.stem),
+                content=content.strip(),
+                metadata=metadata,
             )
         )
 
@@ -107,8 +132,20 @@ def run_manual_demo(question: str | None = None, sample_files: list[str] | None 
 
     print(f"\nEmbedding backend: {getattr(embedder, '_backend_name', embedder.__class__.__name__)}")
 
+    # Chunking step
+    from src.chunking import RecursiveChunker
+    chunker = RecursiveChunker(chunk_size=300)
+    chunked_docs = []
+    for doc in docs:
+        chunks = chunker.chunk(doc.content)
+        for i, c_text in enumerate(chunks):
+            chunk_id = f"{doc.id}_chunk_{i}"
+            chunked_docs.append(Document(id=chunk_id, content=c_text, metadata=doc.metadata))
+            
+    print(f"Chunked {len(docs)} documents into {len(chunked_docs)} chunks.")
+
     store = EmbeddingStore(collection_name="manual_test_store", embedding_fn=embedder)
-    store.add_documents(docs)
+    store.add_documents(chunked_docs)
 
     print(f"\nStored {store.get_collection_size()} documents in EmbeddingStore")
     print("\n=== EmbeddingStore Search Test ===")
@@ -123,6 +160,15 @@ def run_manual_demo(question: str | None = None, sample_files: list[str] | None 
     print(f"Question: {query}")
     print("Agent answer:")
     print(agent.answer(query, top_k=3))
+    
+    print("\n=== Filter Test (Audience: buyer) ===")
+    filter_query = "What is the return policy?"
+    print(f"Question: {filter_query}")
+    results = store.search_with_filter(filter_query, top_k=3, metadata_filter={"audience": "buyer"})
+    for index, result in enumerate(results, start=1):
+        print(f"{index}. source={result['metadata'].get('source')} | audience={result['metadata'].get('audience')}")
+        print(f"   content preview: {result['content'][:100].replace(chr(10), ' ')}...")
+        
     return 0
 
 
