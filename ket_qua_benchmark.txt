@@ -1,0 +1,100 @@
+=== CHECKPOINT 6: BENCHMARKING WITH CONTENT SCORING & A/B TEST ===
+Loaded and chunked 384 documents.
+Embedding backend: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+Stored 384 chunks in EmbeddingStore.
+
+--- PHẦN 1: SCORING (CHẤM ĐIỂM THEO MỨC ĐỘ NỘI DUNG) ---
+--------------------------------------------------
+Q1: Nếu hàng nhận được không khớp với mô tả hoặc bị hư hỏng, người mua có thể làm gì?
+Gold Answer: Người mua có thể đủ điều kiện được eBay Money Back Guarantee bảo vệ và có thể trả lại hàng ngay cả khi chính sách của người bán không chấp nhận đổi trả (return it even if the seller's returns policy says they don't accept returns).
+Marker cần tìm: 'return it even if'
+Filter: {'audience': 'buyer'}
+
+Top 3 Chunks:
+  1. [Score: 0.725] [SAI/THIẾU] | doc_id: ebay-buyer-money-back-guarantee
+     Content: The item received by the buyer doesn't match the listing, for example:  The seller sent the wrong it...
+  2. [Score: 0.709] [SAI/THIẾU] | doc_id: ebay-buyer-money-back-guarantee
+     Content: Sellers are required to deliver the item as it was described in the listing. If the buyer receives t...
+  3. [Score: 0.695] [SAI/THIẾU] | doc_id: ebay-buyer-money-back-guarantee
+     Content: If we determine that the buyer did not meet their return requirements, the buyer may not receive a f...
+
+=> Điểm cho câu này: 0/2
+--------------------------------------------------
+Q2: Người bán có bao lâu để phản hồi yêu cầu trả hàng của người mua?
+Gold Answer: Người bán có 3 ngày làm việc để phản hồi (The seller has 3 business days to get back to you).
+Marker cần tìm: 'seller should get back'
+Filter: {'audience': 'buyer'}
+
+Top 3 Chunks:
+  1. [Score: 0.803] [SAI/THIẾU] | doc_id: ebay-buyer-return-refund
+     Content: ## How the seller may respond to your request The seller has 3 business days to get back to you. How...
+  2. [Score: 0.794] [SAI/THIẾU] | doc_id: ebay-buyer-money-back-guarantee
+     Content: Once the seller has accepted the return, or 3 business days after the request date  Latest:  21 busi...
+  3. [Score: 0.794] [SAI/THIẾU] | doc_id: ebay-buyer-money-back-guarantee
+     Content: Once the seller has accepted the return, or 3 business days after the request date  Latest:  21 busi...
+
+=> Điểm cho câu này: 0/2
+--------------------------------------------------
+Q3: Sau khi hoàn tiền được xử lý, người mua thường mất bao lâu để nhận được tiền?
+Gold Answer: Tiền hoàn thường có mặt trong vòng 3–5 ngày làm việc (typically available within 3-5 business days).
+Marker cần tìm: 'typically available'
+Filter: {'audience': 'buyer'}
+
+Top 3 Chunks:
+  1. [Score: 0.672] [SAI/THIẾU] | doc_id: ebay-buyer-money-back-guarantee
+     Content: 30 calendar days after the estimated or actual delivery date or within the seller's stated returns w...
+  2. [Score: 0.656] [SAI/THIẾU] | doc_id: ebay-buyer-money-back-guarantee
+     Content: Once the seller has accepted the return, or 3 business days after the request date  Latest:  21 busi...
+  3. [Score: 0.656] [SAI/THIẾU] | doc_id: ebay-buyer-money-back-guarantee
+     Content: Once the seller has accepted the return, or 3 business days after the request date  Latest:  21 busi...
+
+=> Điểm cho câu này: 0/2
+--------------------------------------------------
+Q4: Tỉ lệ lỗi giao dịch tối đa được phép trong tiêu chuẩn người bán eBay là bao nhiêu?
+Gold Answer: Tỉ lệ lỗi giao dịch tối đa là 2% (No more than 2% of transactions).
+Marker cần tìm: 'No more than 2%'
+Filter: {'audience': 'seller'}
+
+Top 3 Chunks:
+  1. [Score: 0.668] [SAI/THIẾU] | doc_id: ebay-seller-standards
+     Content: ## What is the policy?  All sellers are required to maintain the following minimum performance stand...
+  2. [Score: 0.663] [SAI/THIẾU] | doc_id: ebay-seller-standards
+     Content:    For full details of actions, time frames, requirements for sellers and how eBay decides the outco...
+  3. [Score: 0.649] [SAI/THIẾU] | doc_id: ebay-seller-standards
+     Content: # Tiêu chuẩn hiệu suất của người bán trên eBay  Our seller performance requirements are intended to ...
+
+=> Điểm cho câu này: 0/2
+--------------------------------------------------
+Q5: Liệt kê các điều kiện để người bán được hưởng bảo vệ dành cho Top Rated Seller.
+Gold Answer: Người bán phải là Top Rated Seller tại thời điểm áp dụng bảo vệ, cư trú tại Mỹ hoặc Canada, không có đánh giá 'Very High' ở bất kỳ chỉ số dịch vụ nào, item được đăng trên eBay.com, và listing cho phép đổi trả từ 30 ngày trở lên.
+Marker cần tìm: 'Top Rated Seller at the time'
+Filter: {'audience': 'seller'}
+
+Top 3 Chunks:
+  1. [Score: 0.791] [CÓ CHỨA ĐÁP ÁN] | doc_id: ebay-seller-protections
+     Content: ## Protections for Top Rated Sellers Top Rated Sellers sellers are eligible for these protections wh...
+  2. [Score: 0.757] [SAI/THIẾU] | doc_id: ebay-seller-standards
+     Content: While these protections are available to all sellers, some of our other protections are dependent on...
+  3. [Score: 0.750] [SAI/THIẾU] | doc_id: ebay-seller-standards
+     Content: ## Fair evaluation, seller protections and appeals...
+
+=> Điểm cho câu này: 2/2
+--------------------------------------------------
+TỔNG ĐIỂM BENCHMARK CỦA CHIẾN LƯỢC NÀY: 2 / 10
+
+
+--- PHẦN 2: A/B TESTING BẮT BUỘC (FILTER vs NO FILTER) ---
+Câu hỏi A/B: Tỉ lệ lỗi giao dịch tối đa được phép trong tiêu chuẩn người bán eBay là bao nhiêu?
+Audience mục tiêu (Gold): seller
+
+> Lần 1: CÓ sử dụng metadata filter (ĐÚNG)
+  1. [doc_id: ebay-seller-standards] (Audience: seller)
+  2. [doc_id: ebay-seller-standards] (Audience: seller)
+  3. [doc_id: ebay-seller-standards] (Audience: seller)
+
+> Lần 2: KHÔNG sử dụng metadata filter (SẼ LẪN LỘN)
+  1. [doc_id: ebay-seller-standards] (Audience: seller)
+  2. [doc_id: ebay-seller-standards] (Audience: seller)
+  3. [doc_id: ebay-seller-standards] (Audience: seller)
+
+Đã lưu kết quả ra file ket_qua_benchmark.txt thành công!
